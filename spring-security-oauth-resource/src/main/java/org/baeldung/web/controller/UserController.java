@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 public class UserController {
 
+    //@PreAuthorize("#oauth2.hasScope('bar') and #oauth2.hasScope('read')")
+    //@PreAuthorize("#oauth2.hasScope('foo') and #oauth2.hasScope('write')")
+    //@PreAuthorize("#oauth2.hasScope('bar') and #oauth2.hasScope('write') and hasRole('ROLE_ADMIN')")
     @PreAuthorize("#oauth2.hasScope('read')")
     @RequestMapping(method = RequestMethod.GET, value = "/users/extra")
     @ResponseBody
