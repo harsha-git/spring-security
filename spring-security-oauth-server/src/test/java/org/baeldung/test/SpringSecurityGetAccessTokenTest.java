@@ -8,9 +8,14 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -28,8 +33,12 @@ import static org.junit.Assert.assertNotNull;
 @ActiveProfiles("test")
 public class SpringSecurityGetAccessTokenTest {
 
-    @Autowired
+  /*  @Autowired
     private JwtTokenStore tokenStore;
+  */
+
+  @Autowired
+  RedisTokenStore tokenStore;
 
     @Test
     public void testGetAccessToken(){
@@ -59,4 +68,6 @@ public class SpringSecurityGetAccessTokenTest {
         return response.jsonPath()
                 .getString("access_token");
     }
+
+
 }

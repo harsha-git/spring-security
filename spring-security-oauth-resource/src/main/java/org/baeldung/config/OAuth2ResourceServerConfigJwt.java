@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
@@ -21,6 +22,7 @@ import org.springframework.security.oauth2.provider.token.DefaultTokenServices;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.filter.GenericFilterBean;
@@ -31,6 +33,9 @@ public class OAuth2ResourceServerConfigJwt extends ResourceServerConfigurerAdapt
 
     @Autowired
     private CustomAccessTokenConverter customAccessTokenConverter;
+
+    @Autowired
+    RedisConnectionFactory redisConnectionFactory;
 
     @Override
     public void configure(final HttpSecurity http) throws Exception {
@@ -47,9 +52,14 @@ public class OAuth2ResourceServerConfigJwt extends ResourceServerConfigurerAdapt
         config.tokenServices(tokenServices());
     }
 
-    @Bean
+  /*  @Bean
     public TokenStore tokenStore() {
         return new JwtTokenStore(accessTokenConverter());
+    }
+  */
+    @Bean
+    public TokenStore tokenStore(RedisConnectionFactory redisConnectionFactory) {
+        return new RedisTokenStore(redisConnectionFactory);
     }
 
     @Bean
@@ -74,13 +84,13 @@ public class OAuth2ResourceServerConfigJwt extends ResourceServerConfigurerAdapt
     @Primary
     public DefaultTokenServices tokenServices() {
         final DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        defaultTokenServices.setTokenStore(tokenStore());
+        defaultTokenServices.setTokenStore(tokenStore(redisConnectionFactory));
         return defaultTokenServices;
     }
 
     @Bean
     protected CustomFilter getSuccessHanlderFilter(){
-        return new CustomFilter((JwtTokenStore)tokenStore());
+        return new CustomFilter((RedisTokenStore)tokenStore(redisConnectionFactory));
     }
 
     @Bean
@@ -89,6 +99,8 @@ public class OAuth2ResourceServerConfigJwt extends ResourceServerConfigurerAdapt
         registration.setEnabled(false);
         return registration;
     }
+
+
 
 
 }

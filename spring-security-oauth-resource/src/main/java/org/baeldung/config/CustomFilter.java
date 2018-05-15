@@ -3,6 +3,7 @@ package org.baeldung.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 import org.springframework.web.filter.GenericFilterBean;
 
 import javax.servlet.FilterChain;
@@ -18,7 +19,7 @@ import java.util.Map;
  */
 public class CustomFilter extends GenericFilterBean{
 
-    private JwtTokenStore tokenStore;
+    private RedisTokenStore tokenStore;
 
     public final static String OATH2_HEADER = "Authorization";
 
@@ -27,7 +28,7 @@ public class CustomFilter extends GenericFilterBean{
      */
     public final static String OATH2_TOKEN_TYPE = "Bearer";
 
-    public CustomFilter(JwtTokenStore tokenStore){
+    public CustomFilter(RedisTokenStore tokenStore){
         this.tokenStore = tokenStore;
     }
 

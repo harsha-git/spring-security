@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
@@ -21,6 +22,7 @@ import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.security.oauth2.provider.token.store.JwtAccessTokenConverter;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
 import org.springframework.security.oauth2.provider.token.store.KeyStoreKeyFactory;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
 
 @Configuration
 @EnableAuthorizationServer
@@ -35,6 +37,9 @@ public class OAuth2AuthorizationServerConfigJwt extends AuthorizationServerConfi
         oauthServer.tokenKeyAccess("permitAll()")
             .checkTokenAccess("isAuthenticated()");
     }
+
+    @Autowired
+    RedisConnectionFactory redisConnectionFactory;
 
     @Override
     public void configure(final ClientDetailsServiceConfigurer clients) throws Exception {
@@ -70,7 +75,7 @@ public class OAuth2AuthorizationServerConfigJwt extends AuthorizationServerConfi
     @Primary
     public DefaultTokenServices tokenServices() {
         final DefaultTokenServices defaultTokenServices = new DefaultTokenServices();
-        defaultTokenServices.setTokenStore(tokenStore());
+        defaultTokenServices.setTokenStore(tokenStore(redisConnectionFactory));
         defaultTokenServices.setSupportRefreshToken(true);
         return defaultTokenServices;
     }
@@ -79,15 +84,20 @@ public class OAuth2AuthorizationServerConfigJwt extends AuthorizationServerConfi
     public void configure(final AuthorizationServerEndpointsConfigurer endpoints) throws Exception {
         final TokenEnhancerChain tokenEnhancerChain = new TokenEnhancerChain();
         tokenEnhancerChain.setTokenEnhancers(Arrays.asList(tokenEnhancer(), accessTokenConverter()));
-        endpoints.tokenStore(tokenStore())
+        endpoints.tokenStore(tokenStore(redisConnectionFactory))
             .tokenEnhancer(tokenEnhancerChain)
             .authenticationManager(authenticationManager);
         endpoints.pathMapping("/oauth/token","/v1/login");
     }
-
+/*
     @Bean
     public TokenStore tokenStore() {
         return new JwtTokenStore(accessTokenConverter());
+    }
+*/
+    @Bean
+    public TokenStore tokenStore(RedisConnectionFactory redisConnectionFactory) {
+        return new RedisTokenStore(redisConnectionFactory);
     }
 
     @Bean

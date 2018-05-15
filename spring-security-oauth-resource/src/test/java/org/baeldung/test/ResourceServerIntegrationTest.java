@@ -10,6 +10,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.security.oauth2.provider.token.store.JwtTokenStore;
+import org.springframework.security.oauth2.provider.token.store.redis.RedisTokenStore;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
 
@@ -21,10 +23,14 @@ import static org.junit.Assert.*;
 @RunWith(SpringRunner.class)
 @ContextConfiguration
 @SpringBootTest(classes = ResourceServerApplication.class, webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class ResourceServerIntegrationTest {
 
-    @Autowired
+   /* @Autowired
     private JwtTokenStore tokenStore;
+  */
+    @Autowired
+    private RedisTokenStore tokenStore;
 
     @Test
     public void whenLoadApplication_thenSuccess() {
@@ -36,9 +42,31 @@ public class ResourceServerIntegrationTest {
         final String tokenValue = obtainAccessToken("fooClientIdPassword", "superuser", "superuser");
         System.out.println("TokenValue:"+tokenValue);
         final OAuth2Authentication auth = tokenStore.readAuthentication(tokenValue);
-        String tokenAttribute = authorizeToken(tokenValue);
-        System.out.println("tokenAdditionalAttribute:"+tokenAttribute);
-        assertNotNull(tokenAttribute);
+        //String tokenAttribute = authorizeToken(tokenValue);
+        int responseCode = authorizeToken(tokenValue, "http://localhost:7082/spring-security-oauth-resource/users/extra1");
+        assertEquals(200,responseCode);
+        //System.out.println("tokenAdditionalAttribute:"+tokenAttribute);
+        //assertNotNull(tokenAttribute);
+    }
+
+    @Test
+    public void testLogout(){
+        final String tokenValue = obtainAccessToken("fooClientIdPassword", "superuser", "superuser");
+        System.out.println("TokenValue:"+tokenValue);
+        final OAuth2Authentication auth = tokenStore.readAuthentication(tokenValue);
+        //String tokenAttribute = authorizeToken(tokenValue);
+        int responseCode = authorizeToken(tokenValue,"http://localhost:7082/spring-security-oauth-resource/users/extra1");
+        System.out.println("users/extra1:"+responseCode);
+        assertEquals(200,responseCode);
+
+        responseCode = authorizeToken(tokenValue,"http://localhost:7082/spring-security-oauth-resource/v1/logout");
+        System.out.println("users/logout:"+responseCode);
+        assertEquals(200,responseCode);
+
+        responseCode = authorizeToken(tokenValue,"http://localhost:7082/spring-security-oauth-resource/users/extra1");
+        System.out.println("v1/extra1:"+responseCode);
+        assertEquals(401,responseCode);
+
     }
 
     private String obtainAccessToken(String clientId, String username, String password) {
@@ -62,16 +90,17 @@ public class ResourceServerIntegrationTest {
                 .getString("access_token");
     }
 
-    private String authorizeToken(String tokenValue){
+    private int authorizeToken(String tokenValue, String url){
         final Map<String, String> params = new HashMap<String, String>();
         params.put("Authorization", "Bearer "+tokenValue);
         final Response response = RestAssured.given()
                 .header("Authorization", "Bearer "+tokenValue)
                 .when()
-                .get("http://localhost:7082/spring-security-oauth-resource/users/extra1");
+                .get(url);
         System.out.println("Accesing resource Status Code:"+response.getStatusCode());
         System.out.println("Accesing resource body:"+response.print());
-       return response.jsonPath()
-                .getString("organization");
+        return response.getStatusCode();
+      /* return response.jsonPath()
+                .getString("organization"); */
     }
 }
