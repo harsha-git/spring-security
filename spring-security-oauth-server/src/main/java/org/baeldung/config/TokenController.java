@@ -32,11 +32,11 @@ public class TokenController {
         tokenServices.revokeToken(tokenId);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/tokens")
+    @RequestMapping(method = RequestMethod.GET, value = "/tokens/clientId/{clientId}")
     @ResponseBody
-    public List<String> getTokens() {
+    public List<String> getTokens(HttpServletRequest request, @PathVariable String clientId) {
         List<String> tokenValues = new ArrayList<String>();
-        Collection<OAuth2AccessToken> tokens = tokenStore.findTokensByClientId("sampleClientId");
+        Collection<OAuth2AccessToken> tokens = tokenStore.findTokensByClientId(clientId);
         if (tokens != null) {
             for (OAuth2AccessToken token : tokens) {
                 tokenValues.add(token.getValue());

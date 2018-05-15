@@ -3,7 +3,6 @@ package org.baeldung.cassandra.model;
 
 import lombok.Data;
 
-import org.baeldung.model.Address;
 import org.springframework.data.cassandra.mapping.Indexed;
 import org.springframework.data.cassandra.mapping.PrimaryKey;
 import org.springframework.data.cassandra.mapping.Table;

@@ -1,4 +1,4 @@
-package org.baeldung.model;
+package org.baeldung.cassandra.model;
 
 
 import lombok.Data;
